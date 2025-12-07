@@ -1,6 +1,7 @@
 import gleam/int
 import gleam/list
 import gleam/result
+import gleam/string
 import util/point
 
 pub type Field(a) {
@@ -19,6 +20,15 @@ pub fn from_list(list: List(List(a))) -> Field(a) {
     })
     |> list.flatten()
   Field(height:, width:, points:)
+}
+
+pub fn from_string(string: String) -> Field(String) {
+  string
+  |> string.trim()
+  |> string.split("\n")
+  |> list.map(string.trim)
+  |> list.map(string.to_graphemes)
+  |> from_list
 }
 
 pub fn width(field: Field(a)) {

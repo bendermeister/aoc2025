@@ -19,12 +19,12 @@ pub type Field {
 }
 
 pub type Message {
-  Push(key: #(Int, Int), value: Int)
-  Pop(reply_to: process.Subject(Result(Int, Nil)), key: #(Int, Int))
+  Push(key: point.Point, value: Int)
+  Pop(reply_to: process.Subject(Result(Int, Nil)), key: point.Point)
   Stop
 }
 
-pub fn on_message(state: dict.Dict(#(Int, Int), Int), message: Message) {
+pub fn on_message(state: dict.Dict(point.Point, Int), message: Message) {
   case message {
     Pop(reply_to:, key:) -> {
       state
@@ -85,11 +85,7 @@ pub fn count_splits(
 pub fn task_1(input: String) {
   let map =
     input
-    |> string.trim()
-    |> string.split("\n")
-    |> list.map(string.trim)
-    |> list.map(string.to_graphemes)
-    |> field.from_list()
+    |> field.from_string()
     |> field.points()
     |> list.map(
       pair.map_second(_, fn(x) {
@@ -115,22 +111,30 @@ pub fn task_1(input: String) {
 
 pub fn count_paths(
   actor,
-  beam: #(Int, Int),
-  map: dict.Dict(#(Int, Int), Field),
+  beam: point.Point,
+  map: dict.Dict(point.Point, Field),
 ) -> Int {
   let mem = actor.call(actor, 20_000, Pop(_, beam))
   use <- result.lazy_unwrap(mem)
 
-  let beam = beam |> pair.map_second(int.add(_, 1))
+  let beam = beam |> point.add(point.new(0, 1))
   let field = dict.get(map, beam)
 
   use <- bool.guard(when: field == Error(Nil), return: 1)
   let assert Ok(field) = field
 
   let result = case field {
-    Splitter ->
-      count_paths(actor, #(beam.0 - 1, beam.1), map)
-      + count_paths(actor, #(beam.0 + 1, beam.1), map)
+    Splitter -> {
+      let left =
+        beam
+        |> point.add(point.new(-1, 0))
+        |> count_paths(actor, _, map)
+      let right =
+        beam
+        |> point.add(point.new(1, 0))
+        |> count_paths(actor, _, map)
+      left + right
+    }
     Start | Empty -> count_paths(actor, beam, map)
   }
 
@@ -142,29 +146,23 @@ pub fn count_paths(
 pub fn task_2(actor, input: String) {
   let map =
     input
-    |> string.trim()
-    |> string.split("\n")
-    |> list.map(string.trim)
-    |> list.map(string.to_graphemes)
-    |> list.index_map(fn(line, y) {
-      line
-      |> list.index_map(fn(field, x) {
-        let field = case field {
+    |> field.from_string()
+    |> field.points
+    |> list.map(
+      pair.map_second(_, fn(x) {
+        case x {
           "." -> Empty
-          "^" -> Splitter
           "S" -> Start
+          "^" -> Splitter
           _ -> panic
         }
-        #(#(x, y), field)
-      })
-    })
-    |> list.flatten()
+      }),
+    )
 
-  let start =
+  let assert Ok(start) =
     map
     |> list.find(fn(x) { x.1 == Start })
     |> result.map(pair.first)
-    |> result.lazy_unwrap(fn() { panic })
 
   let map = map |> dict.from_list()
 
