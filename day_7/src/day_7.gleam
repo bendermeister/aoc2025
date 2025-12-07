@@ -9,6 +9,8 @@ import gleam/pair
 import gleam/result
 import gleam/string
 import simplifile
+import util/field
+import util/point
 
 pub type Field {
   Empty
@@ -40,15 +42,15 @@ pub fn on_message(state: dict.Dict(#(Int, Int), Int), message: Message) {
 }
 
 pub fn count_splits(
-  map: dict.Dict(#(Int, Int), Field),
+  map: dict.Dict(point.Point, Field),
   acc: Int,
-  beams: List(#(Int, Int)),
+  beams: List(point.Point),
 ) -> Int {
   use <- bool.guard(when: list.is_empty(beams), return: acc)
 
   let beams =
     beams
-    |> list.map(pair.map_second(_, int.add(_, 1)))
+    |> list.map(point.add(_, point.new(0, 1)))
     |> list.map(fn(x) {
       map
       |> dict.get(x)
@@ -67,12 +69,15 @@ pub fn count_splits(
   |> list.flat_map(fn(x) {
     let #(field, beam) = x
     case field {
-      Splitter -> [#(beam.0 - 1, beam.1), #(beam.0 + 1, beam.1)]
+      Splitter -> [
+        point.add(beam, point.new(-1, 0)),
+        point.add(beam, point.new(1, 0)),
+      ]
       _ -> [beam]
     }
   })
-  |> list.filter(fn(x) { x.0 >= 0 })
-  |> list.filter(fn(x) { x.1 >= 0 })
+  |> list.filter(fn(x) { x.x >= 0 })
+  |> list.filter(fn(x) { x.y >= 0 })
   |> list.unique
   |> count_splits(map, acc, _)
 }
@@ -84,19 +89,18 @@ pub fn task_1(input: String) {
     |> string.split("\n")
     |> list.map(string.trim)
     |> list.map(string.to_graphemes)
-    |> list.index_map(fn(line, y) {
-      line
-      |> list.index_map(fn(field, x) {
-        let field = case field {
+    |> field.from_list()
+    |> field.points()
+    |> list.map(
+      pair.map_second(_, fn(x) {
+        case x {
           "." -> Empty
           "^" -> Splitter
           "S" -> Start
           _ -> panic
         }
-        #(#(x, y), field)
-      })
-    })
-    |> list.flatten
+      }),
+    )
 
   let start =
     map
