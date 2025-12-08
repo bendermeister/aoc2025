@@ -1,44 +1,19 @@
 import gleam/bool
 import gleam/dict
-import gleam/erlang/process
 import gleam/int
 import gleam/io
 import gleam/list
-import gleam/otp/actor
 import gleam/pair
 import gleam/result
-import gleam/string
 import simplifile
 import util/field
+import util/memo
 import util/point
 
 pub type Field {
   Empty
   Splitter
   Start
-}
-
-pub type Message {
-  Push(key: point.Point, value: Int)
-  Pop(reply_to: process.Subject(Result(Int, Nil)), key: point.Point)
-  Stop
-}
-
-pub fn on_message(state: dict.Dict(point.Point, Int), message: Message) {
-  case message {
-    Pop(reply_to:, key:) -> {
-      state
-      |> dict.get(key)
-      |> actor.send(reply_to, _)
-
-      actor.continue(state)
-    }
-    Push(key:, value:) ->
-      state
-      |> dict.insert(key, value)
-      |> actor.continue
-    Stop -> actor.stop()
-  }
 }
 
 pub fn count_splits(
@@ -110,12 +85,11 @@ pub fn task_1(input: String) {
 }
 
 pub fn count_paths(
-  actor,
+  cache,
   beam: point.Point,
   map: dict.Dict(point.Point, Field),
 ) -> Int {
-  let mem = actor.call(actor, 20_000, Pop(_, beam))
-  use <- result.lazy_unwrap(mem)
+  use <- memo.memoize(cache, beam)
 
   let beam = beam |> point.add(point.new(0, 1))
   let field = dict.get(map, beam)
@@ -128,22 +102,20 @@ pub fn count_paths(
       let left =
         beam
         |> point.add(point.new(-1, 0))
-        |> count_paths(actor, _, map)
+        |> count_paths(cache, _, map)
       let right =
         beam
         |> point.add(point.new(1, 0))
-        |> count_paths(actor, _, map)
+        |> count_paths(cache, _, map)
       left + right
     }
-    Start | Empty -> count_paths(actor, beam, map)
+    Start | Empty -> count_paths(cache, beam, map)
   }
-
-  actor.send(actor, Push(beam, result))
 
   result
 }
 
-pub fn task_2(actor, input: String) {
+pub fn task_2(input: String) {
   let map =
     input
     |> field.from_string()
@@ -166,16 +138,11 @@ pub fn task_2(actor, input: String) {
 
   let map = map |> dict.from_list()
 
-  count_paths(actor, start, map)
+  use cache <- memo.new()
+  count_paths(cache, start, map)
 }
 
 pub fn main() -> Nil {
-  let assert Ok(actor) =
-    actor.new(dict.new())
-    |> actor.on_message(on_message)
-    |> actor.start()
-  let actor = actor.data
-
   let input =
     "
 .......S.......
@@ -198,8 +165,7 @@ pub fn main() -> Nil {
   let assert Ok(input) = simplifile.read("input.txt")
   io.print("Task 1: ")
   input |> task_1() |> int.to_string |> io.println
-  io.print("Task 2: ")
-  input |> task_2(actor, _) |> int.to_string |> io.println
 
-  actor.send(actor, Stop)
+  io.print("Task 2: ")
+  input |> task_2() |> int.to_string |> io.println
 }

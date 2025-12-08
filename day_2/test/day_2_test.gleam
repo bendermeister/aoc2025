@@ -19,6 +19,26 @@ const input = "
 824824821-824824827,2121212118-2121212124
 "
 
+pub fn repeats_55_test() {
+  assert day_2.repeats(55)
+}
+
+pub fn repeats_1010_test() {
+  assert day_2.repeats(1010)
+}
+
+pub fn repeats_1_test() {
+  assert !day_2.repeats(1)
+}
+
+pub fn repeats_234234234_test() {
+  assert day_2.repeats(234_234_234)
+}
+
+pub fn repeats10001000_test() {
+  assert day_2.repeats(10_001_000)
+}
+
 pub fn input_parse_test() {
   let output = input |> day_2.parse_input()
   let expected = [
@@ -37,14 +57,26 @@ pub fn input_parse_test() {
   assert output == expected
 }
 
+pub fn repeats_101_test() {
+  assert !day_2.repeats(101)
+}
+
 pub fn task_1_test() {
-  let output = input |> day_2.task_1()
+  let output =
+    input
+    |> day_2.parse_input()
+    |> day_2.task_1()
   let expected = 1_227_775_554
   assert output == expected
 }
 
 pub fn task_2_test() {
-  let output = input |> day_2.task_2()
+  let output = input |> day_2.parse_input |> day_2.task_2()
   let expected = 4_174_379_265
   assert output == expected
 }
+// pub fn task_2__test() {
+//   let output = input |> day_2.task_2_()
+//   let expected = 4_174_379_265
+//   assert output == expected
+// }

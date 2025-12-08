@@ -1,4 +1,4 @@
-import gleam/erlang/process
+import gleam/bool
 import gleam/int
 import gleam/io
 import gleam/list
@@ -6,6 +6,7 @@ import gleam/pair
 import gleam/result
 import gleam/string
 import simplifile
+import util/palist
 
 pub fn parse_input(input: String) -> List(#(Int, Int)) {
   input
@@ -27,56 +28,84 @@ pub fn parse_input(input: String) -> List(#(Int, Int)) {
   |> pair.first()
 }
 
-pub fn task_1(input: String) {
-  let subject = process.new_subject()
+pub fn task_1(input: List(#(Int, Int))) {
   input
-  |> parse_input()
-  |> list.map(fn(range) {
-    process.spawn(fn() {
-      list.range(range.0, range.1)
-      |> list.filter(fn(x) {
-        let parts = x |> int.to_string |> string.to_graphemes
-        let #(a, b) = parts |> list.split(list.length(parts) / 2)
-        a == b
-      })
-      |> int.sum()
-      |> process.send(subject, _)
-    })
+  |> palist.map(1, fn(range) {
+    list.range(range.0, range.1)
+    |> list.filter(repeats2)
+    |> int.sum()
   })
-  |> list.map(fn(_) { process.receive_forever(subject) })
   |> int.sum()
 }
 
-pub fn task_2(input: String) {
-  let subject = process.new_subject()
-
+pub fn task_2(input: List(#(Int, Int))) {
   input
-  |> parse_input()
-  |> list.map(fn(range) {
-    process.spawn(fn() {
-      list.range(range.0, range.1)
-      |> list.filter(fn(number) {
-        let number = number |> int.to_string()
-        number
-        |> string.to_graphemes()
-        |> list.map_fold("", fn(acc, x) { #(acc <> x, acc <> x) })
-        |> pair.second()
-        |> list.filter(fn(x) { x != number })
-        |> list.map(string.split(number, _))
-        |> list.any(list.all(_, string.is_empty))
-      })
-      |> int.sum()
-      |> process.send(subject, _)
-    })
+  |> palist.map(1, fn(range) {
+    list.range(range.0, range.1)
+    |> list.filter(repeats)
   })
-  |> list.map(fn(_) { process.receive_forever(subject) })
+  |> list.flatten()
   |> int.sum()
+}
+
+pub fn repeater(acc: Int, ceiling: Int, tenner: Int, part: Int) {
+  use <- bool.guard(when: acc >= ceiling, return: acc)
+  acc * tenner + part
+  |> repeater(ceiling, tenner, part)
+}
+
+pub fn tenner(input: Int) {
+  tenner_(input, 10)
+}
+
+pub fn tenner_(input: Int, current: Int) -> List(Int) {
+  use <- bool.guard(when: input < current, return: [])
+  [current, ..tenner_(input, current * 10)]
+}
+
+pub fn repeats2(input: Int) -> Bool {
+  tenner(input)
+  |> list.any(fn(tenner) {
+    let part = input % tenner
+    use <- bool.guard(when: part == 0, return: False)
+    let parts = part * tenner + part
+
+    case parts == input {
+      False -> False
+      True ->
+        input
+        |> int.to_string()
+        |> string.split(part |> int.to_string)
+        |> list.all(string.is_empty)
+    }
+  })
+}
+
+pub fn repeats(input: Int) -> Bool {
+  tenner(input)
+  |> list.any(fn(tenner) {
+    let part = input % tenner
+    use <- bool.guard(when: part == 0, return: False)
+    let parts = repeater(0, input, tenner, part)
+
+    case parts == input {
+      False -> False
+      True ->
+        input
+        |> int.to_string()
+        |> string.split(part |> int.to_string)
+        |> list.all(string.is_empty)
+    }
+  })
 }
 
 pub fn main() -> Nil {
   io.println("Hello from day_2!")
 
   let assert Ok(input) = simplifile.read("./input.txt")
+
+  let input = input |> parse_input
+
   io.print("Task 1: ")
   input |> task_1() |> int.to_string() |> io.println()
   io.print("Task 2: ")
