@@ -8,7 +8,6 @@ import gleam/pair
 import gleam/result
 import gleam/set
 import gleam/string
-import gleam/yielder
 import gleamy/bench
 import simplifile
 import util/union_find
@@ -56,36 +55,26 @@ pub fn main() -> Nil {
   let input = input |> parse_input
   io.print("Task 1: ")
   input |> task_1() |> int.to_string |> io.println
-  io.print("Task 1_: ")
-  input |> task_1_() |> int.to_string |> io.println
-  io.print("Task 1__: ")
-  input |> task_1__() |> int.to_string |> io.println
-  io.print("Task 1___: ")
-  input |> task_1___() |> int.to_string |> io.println
   io.print("Task 2: ")
   input |> task_2() |> int.to_string |> io.println
-
-  bench.run(
-    [bench.Input("data", input)],
-    [
-      bench.Function("task_1", task_1),
-      bench.Function("task_1_", task_1_),
-      bench.Function("task_1__", task_1__),
-      bench.Function("task_1___", task_1___),
-      bench.Function("task_2", task_2),
-    ],
-    [
-      bench.Duration(10_000),
-      bench.Warmup(10),
-    ],
-  )
-  |> bench.table([
-    bench.IPS,
-    bench.Mean,
-    bench.SD,
-    bench.P(99),
-  ])
-  |> io.println
+  // bench.run(
+  //   [bench.Input("data", input)],
+  //   [
+  //     bench.Function("task_1", task_1),
+  //     bench.Function("task_2", task_2),
+  //   ],
+  //   [
+  //     bench.Duration(10_000),
+  //     bench.Warmup(10),
+  //   ],
+  // )
+  // |> bench.table([
+  //   bench.IPS,
+  //   bench.Mean,
+  //   bench.SD,
+  //   bench.P(99),
+  // ])
+  // |> io.println
 }
 
 pub fn distance(a: #(Int, Int, Int), b: #(Int, Int, Int)) {
@@ -103,7 +92,7 @@ pub fn to_sorted_tuples(list: List(#(Int, Int, Int))) {
   |> list.map(pair.second)
 }
 
-pub fn task_1___(input: List(#(Int, Int, Int))) {
+pub fn task_1(input: List(#(Int, Int, Int))) {
   let uf =
     input
     |> to_sorted_tuples()
@@ -120,103 +109,6 @@ pub fn task_1___(input: List(#(Int, Int, Int))) {
   |> dict.delete(Error(Nil))
   |> dict.to_list()
   |> list.map(pair.second)
-  |> list.map(list.length)
-  |> list.sort(order.reverse(int.compare))
-  |> list.take(3)
-  |> int.product()
-}
-
-pub fn task_1_(input: List(#(Int, Int, Int))) {
-  let uf =
-    input
-    |> to_sorted_tuples()
-    |> list.take(1000)
-    |> list.fold(union_find.new(), fn(uf, pair) {
-      uf |> union_find.union_sets(pair.0, pair.1)
-    })
-
-  input
-  |> list.fold(#(uf, dict.new()), fn(acc, v) {
-    let #(uf, groups) = acc
-    let parent = union_find.find_set(uf, v)
-    case parent {
-      Error(_) -> #(uf, groups)
-      Ok(#(uf, parent)) ->
-        groups
-        |> dict.get(parent)
-        |> result.unwrap([])
-        |> fn(tail) { [v, ..tail] }
-        |> dict.insert(groups, parent, _)
-        |> pair.new(uf, _)
-    }
-  })
-  |> pair.second()
-  |> dict.to_list()
-  |> list.map(pair.second)
-  |> list.map(list.length)
-  |> list.sort(order.reverse(int.compare))
-  |> list.take(3)
-  |> int.product()
-}
-
-pub fn task_1__(input: List(#(Int, Int, Int))) {
-  input
-  |> to_sorted_tuples()
-  |> yielder.from_list()
-  |> yielder.take(1000)
-  |> yielder.fold(dict.new(), fn(graph, pair) {
-    let #(a, b) = pair
-    let a_value = graph |> dict.get(a) |> result.lazy_unwrap(fn() { [a] })
-    let b_value = graph |> dict.get(b) |> result.lazy_unwrap(fn() { [b] })
-
-    let value = list.append(a_value, b_value) |> list.unique()
-
-    value
-    |> list.fold(graph, fn(graph, key) { graph |> dict.insert(key, value) })
-  })
-  |> dict.to_list()
-  |> list.map(pair.second)
-  |> list.group(fn(a) {
-    a
-    |> list.max(fn(a, b) {
-      int.compare(a.0, b.0)
-      |> order.break_tie(int.compare(a.1, b.1))
-      |> order.break_tie(int.compare(a.2, b.2))
-    })
-  })
-  |> dict.to_list()
-  |> list.map(pair.second)
-  |> list.map(list.length)
-  |> list.sort(order.reverse(int.compare))
-  |> list.take(3)
-  |> int.product()
-}
-
-pub fn task_1(input: List(#(Int, Int, Int))) {
-  input
-  |> to_sorted_tuples()
-  |> yielder.from_list()
-  |> yielder.take(1000)
-  |> yielder.fold(dict.new(), fn(graph, pair) {
-    let #(a, b) = pair
-    let a_value = graph |> dict.get(a) |> result.lazy_unwrap(fn() { [a] })
-    let b_value = graph |> dict.get(b) |> result.lazy_unwrap(fn() { [b] })
-
-    let value = list.append(a_value, b_value) |> list.unique()
-
-    value
-    |> list.fold(graph, fn(graph, key) { graph |> dict.insert(key, value) })
-  })
-  |> dict.to_list()
-  |> list.map(pair.second)
-  |> list.map(
-    list.sort(_, fn(a, b) {
-      int.compare(a.0, b.0)
-      |> order.break_tie(int.compare(a.1, b.1))
-      |> order.break_tie(int.compare(a.2, b.2))
-    }),
-  )
-  |> list.unique()
   |> list.map(list.length)
   |> list.sort(order.reverse(int.compare))
   |> list.take(3)
