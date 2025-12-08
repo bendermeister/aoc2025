@@ -93,6 +93,7 @@ pub fn task_2(input: List(#(Int, Int))) {
     |> list.filter(fn(input) {
       let exp = get_tenner(input)
       list.range(1, exp - 1)
+      |> list.filter(fn(x) { exp % x == 0 })
       |> list.any(fn(x) {
         let part = input % exp10(x)
         let factor = task_2_lookup(exp, x)
