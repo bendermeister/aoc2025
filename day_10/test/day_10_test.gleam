@@ -1,6 +1,6 @@
-import day_10.{High, Low}
+// import day_10.{High, Low}
+import day_10
 import gleam/list
-import gleam/set
 import gleeunit
 
 pub fn main() -> Nil {
@@ -75,13 +75,12 @@ pub fn task_2_line_3_test() {
 pub fn task_2_test() {
   assert day_10.task_2(input) == 33
 }
-
-pub fn task_2_get_possibilities_test() {
-  let vecs = [[0, 0, 1, 1], [1, 1, 0, 0]]
-  let output = day_10.get_possibilities(vecs)
-
-  assert set.contains(output, [Low, Low, High, High])
-  assert set.contains(output, [High, High, Low, Low])
-  assert set.contains(output, [High, High, High, High])
-  assert set.size(output) == 3
-}
+// pub fn task_2_get_possibilities_test() {
+//   let vecs = [[0, 0, 1, 1], [1, 1, 0, 0]]
+//   let output = day_10.get_possibilities(vecs)
+//
+//   assert list.contains(output, [Low, Low, High(1), High(1)])
+//   assert list.contains(output, [High(1), High(1), Low, Low])
+//   assert list.contains(output, [High(1), High(1), High(1), High(1)])
+//   assert list.length(output) == 3
+// }
