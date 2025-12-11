@@ -1,6 +1,10 @@
 // import day_10.{High, Low}
-import day_10
+import day_10.{Constraint, ProblemSpace, Variable}
+
+// import gleam/dict
+// import gleam/io
 import gleam/list
+import gleam/set
 import gleeunit
 
 pub fn main() -> Nil {
@@ -55,6 +59,46 @@ pub fn task_1_test() {
 pub fn parse_test() {
   let output = day_10.parse(input_str)
   assert output == input
+}
+
+pub fn problem_space_test() {
+  let problem_space =
+    ProblemSpace(
+      cost: 0,
+      // constants: dict.new(),
+      variables: [
+        Variable(0),
+        Variable(1),
+        Variable(2),
+        Variable(3),
+        Variable(4),
+        Variable(5),
+      ],
+      constraints: [
+        Constraint(
+          variables: [Variable(4), Variable(5)] |> set.from_list(),
+          value: 3,
+        ),
+        Constraint(
+          variables: [Variable(1), Variable(5)] |> set.from_list(),
+          value: 5,
+        ),
+        Constraint(
+          variables: [Variable(2), Variable(3), Variable(4)] |> set.from_list(),
+          value: 4,
+        ),
+        Constraint(
+          variables: [Variable(0), Variable(1), Variable(4)] |> set.from_list(),
+          value: 7,
+        ),
+      ],
+    )
+
+  let problem_space =
+    problem_space
+    |> day_10.problem_space_update(Variable(5), 3)
+
+  assert day_10.is_problem_space_feasible(problem_space)
 }
 
 pub fn task_2_line_test() {
