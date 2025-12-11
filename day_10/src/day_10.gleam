@@ -351,7 +351,7 @@ pub fn task_2_backtrack(problem_space: ProblemSpace, max_cost: Int) {
 
   case problem_space_pop(problem_space) {
     Ok(#(variable, max)) ->
-      list.range(0, max)
+      list.range(max, 0)
       |> list.map(problem_space_update(problem_space, variable, _))
       |> list.fold(max_cost, fn(max_cost, problem_space) {
         task_2_backtrack(problem_space, max_cost)
@@ -402,6 +402,7 @@ fn problem_space_update_rec(ps: ProblemSpace) -> ProblemSpace {
 
 pub fn main() -> Nil {
   let assert Ok(input) = simplifile.read("input.txt")
+
   let input = input |> parse()
   io.print("Task 1: ")
   input |> task_1 |> int.to_string |> io.println
