@@ -1,5 +1,4 @@
 import gleam/bool
-import gleam/dict
 import gleam/int
 import gleam/io
 import gleam/list
@@ -10,7 +9,7 @@ import gleam/set
 import gleam/string
 import gleamy/bench
 import simplifile
-import util/union_find
+import union_find
 
 pub fn parse_input(input: String) {
   input
@@ -93,26 +92,15 @@ pub fn to_sorted_tuples(list: List(#(Int, Int, Int))) {
 }
 
 pub fn task_1(input: List(#(Int, Int, Int))) {
-  let uf =
-    input
-    |> to_sorted_tuples()
-    |> list.take(1000)
-    |> list.fold(union_find.new(), fn(uf, pair) {
-      uf |> union_find.union_sets(pair.0, pair.1)
-    })
-
   input
-  |> list.group(fn(v) {
-    union_find.find_set(uf, v)
-    |> result.map(pair.second)
-  })
-  |> dict.delete(Error(Nil))
-  |> dict.to_list()
-  |> list.map(pair.second)
+  |> to_sorted_tuples()
+  |> list.take(1000)
+  |> union_find.from_edges()
+  |> union_find.to_list()
   |> list.map(list.length)
   |> list.sort(order.reverse(int.compare))
   |> list.take(3)
-  |> int.product()
+  |> int.product
 }
 
 pub fn task_2(input: List(#(Int, Int, Int))) {

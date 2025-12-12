@@ -1,4 +1,4 @@
-name = "day_8"
+name = "day_12"
 version = "1.0.0"
 
 # Fill out these fields if you intend to generate HTML documentation or publish
@@ -15,10 +15,6 @@ version = "1.0.0"
 [dependencies]
 gleam_stdlib = ">= 0.44.0 and < 2.0.0"
 simplifile = ">= 2.3.1 and < 3.0.0"
-gleamy_bench = ">= 0.6.0 and < 1.0.0"
-gleam_yielder = ">= 1.1.0 and < 2.0.0"
-util = { path = "../util" }
-union_find = { git = "https://github.com/bendermeister/union_find", ref = "main" }
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"
