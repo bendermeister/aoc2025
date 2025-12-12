@@ -1,6 +1,7 @@
 import gleam/bool
 import gleam/erlang/process
 import gleam/int
+import gleam/io
 import gleam/list
 import gleam/otp/actor
 import gleam/pair
@@ -32,7 +33,10 @@ pub fn map(list: List(a), batch_size: Int, func: fn(a) -> b) {
     let remaining_batches = state.remaining_batches - 1
     let accumulator = state.accumulator |> list.append(data)
     case remaining_batches <= 0 {
-      False -> actor.continue(State(remaining_batches:, accumulator:))
+      False -> {
+        io.println("TODO: " <> int.to_string(remaining_batches))
+        actor.continue(State(remaining_batches:, accumulator:))
+      }
       True -> {
         accumulator
         |> list.sort(fn(a, b) { int.compare(a.0, b.0) })

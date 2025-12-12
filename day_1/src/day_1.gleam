@@ -57,9 +57,7 @@ pub fn task_2(input: List(Rotation)) -> Int {
 
 pub fn main() -> Nil {
   let assert Ok(input) = simplifile.read("./input.txt")
-  let input =
-    input
-    |> input_parse()
+  let input = input |> input_parse()
 
   io.print("Task 1: ")
   input |> task_1 |> int.to_string() |> io.println()
